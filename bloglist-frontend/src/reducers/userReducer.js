@@ -1,11 +1,12 @@
 import blogService from '../services/blogs'
 
 const userReducer = (store = [], action) => {
-  if (action.type === 'INIT_USERS') {
-    return action.data
+  switch(action.type) {
+    case 'INIT_USERS' :
+      return action.data
+    default :
+      return store
   }
-
-  return store
 }
 
 

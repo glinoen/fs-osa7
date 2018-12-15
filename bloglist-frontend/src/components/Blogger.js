@@ -1,7 +1,9 @@
 import React from 'react'
 import blogService from '../services/blogs'
 import { basicNotif } from '../reducers/notificationReducer'
+import { blogInitialization } from '../reducers/blogReducer'
 import { connect } from 'react-redux'
+import { Button, FormGroup, FormControl, ControlLabel } from 'react-bootstrap'
 
 class Blogger extends React.Component {
   constructor(props) {
@@ -31,6 +33,7 @@ class Blogger extends React.Component {
       await blogService.create(blogi)
       await this.props.basicNotif(`a new blog '${blogi.title}' added`, 10)
       this.setState({ title: '', author: '', url: '' })
+      await this.props.blogInitialization()
 
     } catch(exception) {
       console.log(exception)
@@ -43,34 +46,30 @@ class Blogger extends React.Component {
       <div>
         <h2>create new</h2>
         <form onSubmit={this.createNewBlog}>
-          <div>
-            title
-            <input
+          <FormGroup>
+            <ControlLabel>title</ControlLabel>
+            <FormControl
               type="text"
               name="title"
               value={this.state.title}
               onChange={this.handleLoginFieldChange}
             />
-          </div>
-          <div>
-            author
-            <input
+            <ControlLabel>author</ControlLabel>
+            <FormControl
               type="text"
               name="author"
               value={this.state.author}
               onChange={this.handleLoginFieldChange}
             />
-          </div>
-          <div>
-            url
-            <input
+            <ControlLabel>url</ControlLabel>
+            <FormControl
               type="text"
               name="url"
               value={this.state.url}
               onChange={this.handleLoginFieldChange}
             />
-          </div>
-          <button type="submit">create</button>
+            <Button bsStyle="success" type="submit">create</Button>
+          </FormGroup>
         </form>
 
       </div>
@@ -80,7 +79,8 @@ class Blogger extends React.Component {
 
 
 const mapDispatchToProps = {
-  basicNotif
+  basicNotif,
+  blogInitialization
 }
 
 export default connect(

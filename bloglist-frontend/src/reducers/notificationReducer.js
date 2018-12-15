@@ -5,7 +5,7 @@ const initialState = { content: defaultMessage }
 const notificationReducer = (store = initialState, action) => {
   switch(action.type) {
     case 'NEW_NOTIFICATION' :
-      return { content : action.data }
+      return { content : action.data, style: action.style }
     case 'RESET' :
       return { content: '' }
     default :
@@ -13,12 +13,12 @@ const notificationReducer = (store = initialState, action) => {
   }
 }
 
-export const basicNotif = (content, time) => {
+export const basicNotif = (content, time, style) => {
   return (dispatch) => {
-    console.log('HUHUUU################')
     dispatch({
       type: 'NEW_NOTIFICATION',
-      data: content
+      data: content,
+      style: style
     })
     setTimeout(() => {
       dispatch({

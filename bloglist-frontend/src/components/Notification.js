@@ -1,21 +1,23 @@
 import React from 'react'
 import { connect } from 'react-redux'
+import { Alert } from 'react-bootstrap'
 
 class Notification extends React.Component {
   render() {
-    const style = {
-      border: 'solid',
-      padding: 10,
-      borderWidth: 1,
-      color: 'mediumseagreen'
-    }
+
     if (this.props.notification.content === '') {
       return(null)
+    } else if(this.props.notification.style === 'danger') {
+      return(
+        <Alert bsStyle="danger">
+          {this.props.notification.content}
+        </Alert>
+      )
     } else {
       return (
-        <div style={style}>
+        <Alert bsStyle="success">
           {this.props.notification.content}
-        </div>
+        </Alert>
       )
     }
   }

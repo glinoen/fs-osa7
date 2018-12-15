@@ -1,43 +1,41 @@
 import React from 'react'
 import Blog from './components/Blog'
-import Blogger from './components/Blogger'
-import Togglable from './components/Togglable'
+import Footer from './components/Footer'
 import blogService from './services/blogs'
 import loginService from './services/login'
 import { BrowserRouter as Router, Route, Link } from 'react-router-dom'
 import Notification from './components/Notification'
 import { basicNotif } from './reducers/notificationReducer'
 import { userInitialization } from './reducers/userReducer'
+import { blogInitialization } from './reducers/blogReducer'
+import { loggedIn } from './reducers/loginReducer'
 import { connect } from 'react-redux'
+import { ListGroup, ListGroupItem, FormGroup, FormControl, ControlLabel, Button, Table } from 'react-bootstrap'
+
+
 
 class App extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      blogs: [],
       username: '',
-      password: '',
-      user: null,
+      password: ''
     }
   }
 
   componentDidMount() {
-    blogService.getAll().then(blogs =>
-      this.setState({ blogs })
-    )
-
     this.props.userInitialization()
+    this.props.blogInitialization()
 
     const loggedUserJSON = window.localStorage.getItem('loggedBlogappUser')
     if (loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON)
-      this.setState({ user:user })
+      this.props.loggedIn(user)
       blogService.setToken(user.token)
     }
   }
 
   handleLoginFieldChange = (event) => {
-    console.log(event.target.value)
     this.setState({ [event.target.name]: event.target.value })
   }
 
@@ -48,99 +46,64 @@ class App extends React.Component {
         username: this.state.username,
         password: this.state.password
       })
-
       window.localStorage.setItem('loggedBlogappUser', JSON.stringify(user))
       blogService.setToken(user.token)
-      this.setState({ username: '', password: '', user })
+      this.props.loggedIn(user)
+      this.setState({ username: '', password: '' })
     } catch(exception) {
-      this.props.basicNotif('wrong username or password', 5)
+      this.props.basicNotif('wrong username or password', 5, 'danger')
       this.setState({
         password: ''
       })
     }
   }
 
-  logout = () => {
-    window.localStorage.clear()
-    this.setState({ user: null })
-  }
-
-  f5 = () => {
-    blogService.getAll().then(blogs =>
-      this.setState({ blogs })
-    )
-    console.log('RRRAAAAAA!')
-  }
 
   render() {
-    console.log('rendered')
     const loginForm = () => (
       <div className="content">
-        <Notification />
         <h2>Log in to application</h2>
-
         <form onSubmit={this.login}>
-          <div>
-            username
-            <input
+          <FormGroup>
+            <ControlLabel>username:</ControlLabel>
+            <FormControl
               type="text"
               name="username"
               value={this.state.username}
               onChange={this.handleLoginFieldChange}
             />
-          </div>
-          <div>
-            password
-            <input
+            <ControlLabel>password:</ControlLabel>
+            <FormControl
               type="password"
               name="password"
               value={this.state.password}
               onChange={this.handleLoginFieldChange}
             />
-          </div>
-          <button type="submit">log in</button>
+            <Button bsStyle="success" type="submit">login</Button>
+          </FormGroup>
         </form>
       </div>
     )
 
     const blogForm = () => (
-      <div className="content">
-        {this.state.blogs.sort((a, b) => b.likes - a.likes).map(blog =>
-          <ul key={blog.id}>
-            <Link to={`/blogs/${blog.id}`} >{blog.title} {blog.author}</Link>
-          </ul>
-        )}
+      <div >
+        <h3>blogs</h3>
+        <ListGroup>
+          {this.props.blogs.sort((a, b) => b.likes - a.likes).map(blog =>
+            <ListGroupItem key={blog.id}>
+              <Link to={`/blogs/${blog.id}`}>{blog.title} {blog.author}</Link>
+            </ListGroupItem>
+          )}
+        </ListGroup>
       </div>
     )
 
-    const Footer = () => {
-      if (this.state.user === null) {
-        return null
-      } else {
-        return(
-          <div>
-            <Notification />
-            <h2>blog app</h2>
-            <div>
-              <Link to="/">blogs</Link> &nbsp;
-              <Link to="/users">users</Link> &nbsp;
-            </div>
-            <table>
-              <tbody>
-                <tr>
-                  <td>&nbsp; {this.state.user.name} logged in</td>
-                  <td>&nbsp;<button onClick={() => this.logout()}>log out</button></td>
-                </tr>
-              </tbody>
-            </table>
-          </div>)
-      }
-    }
+
 
     const Users = ({ users }) => (
       <div>
-        <h2>users</h2>
-        <table>
+        <h3>users</h3>
+        <Table striped>
           <tbody>
             <tr>
               <th></th>
@@ -155,7 +118,7 @@ class App extends React.Component {
             }
             )}
           </tbody>
-        </table>
+        </Table>
       </div>
     )
 
@@ -166,7 +129,7 @@ class App extends React.Component {
         return(
           <div>
             <h2>{user.name}</h2>
-            <h3>Added blogs</h3>
+            <b>Added blogs</b>
             <ul>
               {user.blogs.map(blog =>
                 <li key={blog._id}>
@@ -178,38 +141,33 @@ class App extends React.Component {
       }
     }
 
-    const Home = () => {
-      if (this.state.user === null) {
-        return loginForm()
-
-      } else {
-        return blogForm()
-      }
-    }
-
     const userById = (id) => {
-      console.log('trigger1')
       const user = this.props.users.find(x => x.id === id)
       return user
     }
 
     const blogById = (id) => {
-      console.log('trigger2')
-      const blog = this.state.blogs.find(x => x.id === id)
+      const blog = this.props.blogs.find(x => x.id === id)
       return blog
     }
 
     return (
-      <Router>
-        <div>
+      <Router >
+        <div className="container">
           <div className="wrapper">
-            <Footer />
-            <Route exact path="/" render={() => <Home />}/>
-            {this.state.user !== null &&
-              <Togglable buttonLabel='create new blog'>
-                <Blogger action={this.fresher}/>
-              </Togglable>
+            <Notification />
+            <Route render={({ history }) =>
+              <Footer history={history} />}
+            />
+            {this.props.user === null ?
+              <Route exact path="/" render={() =>
+                loginForm()}
+              /> :
+              <Route exact path="/" render={() =>
+                blogForm()}
+              />
             }
+
             <Route exact path="/users" render={() =>
               <Users users ={this.props.users}/>}
             />
@@ -217,7 +175,7 @@ class App extends React.Component {
               <User user={userById(match.params.id)} />}
             />
             <Route exact path="/blogs/:id" render={({ match }) =>
-              <Blog blog={blogById(match.params.id)} user={this.state.user} f5={this.f5} />}
+              <Blog blog={blogById(match.params.id)} user={this.props.user}/>}
             />
           </div>
         </div>
@@ -228,14 +186,18 @@ class App extends React.Component {
 
 const mapStateToProps = (state) => {
   return {
+    blogs: state.blogs,
     users: state.users,
-    notification: state.notification
+    notification: state.notification,
+    user: state.user
   }
 }
 
 const mapDispatchToProps = {
   basicNotif,
-  userInitialization
+  userInitialization,
+  blogInitialization,
+  loggedIn,
 }
 
 

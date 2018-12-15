@@ -3,17 +3,17 @@ import blogService from '../services/blogs'
 import PropTypes from 'prop-types'
 import { basicNotif } from '../reducers/notificationReducer'
 import { connect } from 'react-redux'
+import { blogInitialization } from '../reducers/blogReducer'
+import { Button, Form } from 'react-bootstrap'
 
 
 class Blog extends React.Component {
   likeMe = async () => {
     let blogi = this.props.blog
     blogi.likes = blogi.likes + 1
-    console.log('mitäköhän vittua')
-
     try {
       await blogService.like(blogi)
-      await this.props.f5()
+      await this.props.blogInitialization()
     } catch (exception) {
       console.log(exception)
     }
@@ -24,7 +24,7 @@ class Blog extends React.Component {
     const content = e.target.comment.value
     e.target.comment.value = ''
     await blogService.postComment(this.props.blog, content)
-    await this.props.f5()
+    await this.props.blogInitialization()
     await this.props.basicNotif(`comment '${content}'`, 10)
   }
 
@@ -32,7 +32,7 @@ class Blog extends React.Component {
     if(window.confirm('delete ' + this.props.blog.title + ' by ' + this.props.blog.author +'?'  )){
       try {
         await blogService.destroy(this.props.blog)
-        await this.props.f5()
+        await this.props.blogInitialization()
       } catch (exception) {
         console.log(exception)
       }
@@ -48,10 +48,10 @@ class Blog extends React.Component {
       blogiElement = <div className="content">
         <h2>{blogi.title} {blogi.author}</h2>
         <a href={blogi.url}>{blogi.url} </a>
-        <p>{blogi.likes} likes  <button onClick={() => this.likeMe()}>like</button></p>
+        <p><b>{blogi.likes}</b> likes  <Button bsStyle="primary" onClick={() => this.likeMe()}>like</Button></p>
         <p>added by {blogi.user.name}</p>
         {blogi.user === undefined || blogi.user.username === this.props.user.username  ?
-          <button onClick={this.delete}>delete</button> :
+          <Button bsStyle="danger" onClick={this.delete}>delete</Button> :
           null
         }
         <h3>comments</h3>
@@ -61,23 +61,15 @@ class Blog extends React.Component {
               <p>{comment}</p>
             </li>)}
         </ul>
-        <form onSubmit={this.handleSubmit}>
+        <Form inline onSubmit={this.handleSubmit}>
           <div><input name='comment'/></div>
-          <button>add comment</button>
-        </form>
+          <Button bsStyle="success">add comment</Button>
+        </Form>
       </div>
     }
 
-    const blogStyle = {
-      paddingTop: 10,
-      paddingLeft: 2,
-      border: 'solid',
-      borderWidth: 1,
-      marginBottom: 5
-    }
-
     return (
-      <div style={blogStyle} className="wrapper">
+      <div className="wrapper">
         {blogiElement}
       </div>
     )
@@ -89,7 +81,8 @@ Blog.propTypes = {
 }
 
 const mapDispatchToProps = {
-  basicNotif
+  basicNotif,
+  blogInitialization
 }
 
 export default connect(
