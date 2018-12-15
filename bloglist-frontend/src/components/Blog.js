@@ -33,6 +33,7 @@ class Blog extends React.Component {
       try {
         await blogService.destroy(this.props.blog)
         await this.props.blogInitialization()
+        this.props.history.push('/')
       } catch (exception) {
         console.log(exception)
       }
